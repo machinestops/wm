@@ -1,0 +1,35 @@
+#!/usr/bin/env wish
+
+font create f -family Fixed -size 12
+
+set barconfig {
+    -font f -textvariable text
+    -bg white -fg black
+    -padx 4 -pady 4 
+    -relief solid
+    -width 45
+    -highlightcolor white
+    -bd 1
+}
+
+label .bar {*}$barconfig
+pack .bar
+wm resizable . false false
+wm geometry . =-5+5
+. configure -bg white -bd 6
+
+# taken from TCL wiki https://wiki.tcl-lang.org/page/every 
+# user is https://wiki.tcl-lang.org/page/Rob+Maris?R=0&O=RJM&W=
+
+proc every {ms body} {after $ms [namespace code [info level 0]]; eval $body}
+
+every 1000 {
+    set cap [open "/sys/class/power_supply/BAT1/capacity"]
+    set stat [open "/sys/class/power_supply/BAT1/status"]
+    set ::text [concat \
+        [read -nonewline $cap]%,\
+        [string tolower [read -nonewline $stat]] at \
+        [clock format [clock seconds] -format "%R(%Z) on %Y-%m-%d"]]
+    close $cap
+    close $stat
+}
